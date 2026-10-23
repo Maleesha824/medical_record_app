@@ -108,9 +108,13 @@ class NotificationService {
   }
 
   static Future<void> cancelMedicine(int medicationId) async {
-    for (var i = 0; i < 5000; i++) {
-      await plugin.cancel(_medicineId(medicationId, i));
-    }
+    final firstId = _medicineId(medicationId, 0);
+    final lastId = _medicineId(medicationId, 5000);
+    final pending = await plugin.pendingNotificationRequests();
+    final medicineReminderIds = pending
+        .where((request) => request.id >= firstId && request.id < lastId)
+        .map((request) => request.id);
+    await Future.wait(medicineReminderIds.map((id) => plugin.cancel(id)));
   }
 
   static Future<void> cancelAppointment(int visitId) async {

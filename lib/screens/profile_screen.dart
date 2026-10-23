@@ -14,7 +14,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       blood = TextEditingController(),
       allergy = TextEditingController(),
       emergency = TextEditingController();
-  bool dark = false, lock = false;
+  bool dark = false, lock = false, isEditing = true, hasSavedProfile = false;
   @override
   void initState() {
     super.initState();
@@ -27,6 +27,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     blood.text = p.getString('blood') ?? '';
     allergy.text = p.getString('allergy') ?? '';
     emergency.text = p.getString('emergency') ?? '';
+    hasSavedProfile =
+        p.getBool('profile_saved') ??
+        [
+          name.text,
+          blood.text,
+          allergy.text,
+          emergency.text,
+        ].any((value) => value.trim().isNotEmpty);
+    isEditing = !hasSavedProfile;
     dark = p.getBool('dark_mode') ?? false;
     lock = await AuthService.enabled();
     if (mounted) setState(() {});
@@ -38,11 +47,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await p.setString('blood', blood.text);
     await p.setString('allergy', allergy.text);
     await p.setString('emergency', emergency.text);
+    await p.setBool('profile_saved', true);
     if (mounted) {
+      setState(() {
+        hasSavedProfile = true;
+        isEditing = false;
+      });
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Profile saved')));
     }
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    blood.dispose();
+    allergy.dispose();
+    emergency.dispose();
+    super.dispose();
   }
 
   @override
@@ -57,7 +80,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _f(blood, 'Blood group', Icons.bloodtype),
         _f(allergy, 'Allergies', Icons.warning_amber),
         _f(emergency, 'Emergency contact', Icons.phone),
-        FilledButton(onPressed: save, child: const Text('Save Profile')),
+        if (isEditing)
+          FilledButton(onPressed: save, child: const Text('Save Profile'))
+        else
+          OutlinedButton.icon(
+            onPressed: () => setState(() => isEditing = true),
+            icon: const Icon(Icons.edit_outlined),
+            label: const Text('Edit Profile'),
+          ),
         const SizedBox(height: 18),
         const Text(
           'App settings',
@@ -121,7 +151,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     padding: const EdgeInsets.only(bottom: 12),
     child: TextField(
       controller: c,
-      decoration: InputDecoration(labelText: l, prefixIcon: Icon(i)),
+      readOnly: !isEditing,
+      decoration: InputDecoration(
+        labelText: l,
+        prefixIcon: Icon(i),
+        suffixIcon: hasSavedProfile && !isEditing
+            ? const Icon(Icons.lock_outline, size: 18)
+            : null,
+      ),
     ),
   );
 }
