@@ -1,0 +1,21 @@
+MEDICAL RECORD APP — VERSION 2
+
+1. Open this folder in VS Code.
+2. Open PowerShell in this folder.
+3. Run:
+
+   powershell -ExecutionPolicy Bypass -File .\setup_v2.ps1
+
+4. Start your Pixel 8 emulator if it is not running:
+
+   flutter emulators --launch Pixel_8
+
+5. Check the device:
+
+   flutter devices
+
+6. Run:
+
+   flutter run
+
+The setup script creates the modern Android project using the Flutter SDK installed on your computer, then adds the exact-notification and biometric configuration.
